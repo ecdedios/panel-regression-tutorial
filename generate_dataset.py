@@ -1,5 +1,6 @@
-import numpy as np
 import pandas as pd
+import numpy as np
+from faker import Faker
 
 np.random.seed(493)
 
@@ -8,8 +9,20 @@ num_clients = 120
 years = list(range(2000, 2026))
 records = []
 
-# Generate client metadata
-clients = [f"Client_{i:03}" for i in range(1, num_clients + 1)]
+# Initialize Faker
+faker = Faker()
+Faker.seed(493)  # Ensure reproducibility
+
+# Generate realistic client names
+clients = [faker.company() for _ in range(num_clients)]
+
+# Ensure uniqueness
+clients = list(pd.Series(clients).drop_duplicates().values)
+while len(clients) < num_clients:
+    new_names = [faker.company() for _ in range(num_clients - len(clients))]
+    clients += list(pd.Series(new_names).drop_duplicates().values)
+clients = clients[:num_clients]  # Final trimmed list
+
 client_quality = {client: np.random.normal(0, 1) for client in clients}
 econ_shocks = {year: np.random.normal(0, 1.5) for year in years}
 
@@ -65,6 +78,21 @@ df = df.merge(contract_info[['client', 'number_years_in_contract']], on='client'
 # Final cleaned version
 df = df[['client', 'year', 'sales', 'revenue', 'years_active', 'number_years_in_contract']]
 
+# df.to_csv('data.csv', index=False)
 
+# Pivot for sales
+df_sales_wide = df.pivot(index='client', columns='year', values='sales')
 
-df.to_csv('data.csv', index=False)
+# Pivot for revenue
+df_revenue_wide = df.pivot(index='client', columns='year', values='revenue')
+
+# # Optional: rename columns for clarity (e.g., prefix with 'sales_' or 'rev_')
+# df_sales_wide.columns = [f"sales_{col}" for col in df_sales_wide.columns]
+# df_revenue_wide.columns = [f"rev_{col}" for col in df_revenue_wide.columns]
+
+# Reset index if needed
+df_sales_wide = df_sales_wide.reset_index()
+df_revenue_wide = df_revenue_wide.reset_index()
+
+df_sales_wide.to_csv('sales.csv', index=False)
+df_revenue_wide.to_csv('revenue.csv', index=False)

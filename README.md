@@ -12,11 +12,8 @@ Some technologies used:
 
 - python
 - power bi
-- pandas
-- matplotlib
-- faker
 
-To see the project in action, run the notebooks or scripts.
+To see the project in action, run the notebook or script.
 
 ## Meta
 
